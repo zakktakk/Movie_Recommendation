@@ -26,14 +26,15 @@ class Layer:
 #Projection Layer
 class Projection:
     def __init__(self, in_dim, out_dim, scale):
-        self.V = np.random.uniform(in_dim, out_dim) * scale
+        self.W = np.random.uniform(low=-0.08, high=0.08, size=(in_dim, out_dim)).astype("float32") * scale
         self.delta = None
     def f_prop(self, x):
-        x_prj = np.sum(self.V[x], axis = 0) / len(x)
-        return x_prj
+        print type(x)
+        self.z = np.sum(self.W[x], axis = 0) / len(x)
+        return self.z
     #how to b_prop???
-    def b_prop(self, delta, V):
-        self.delta = np.dot(delta, V.T)
+    def b_prop(self, delta, W):
+        self.delta = np.dot(delta, W.T)
 
 #define activation function
 def softmax(x):
@@ -47,17 +48,6 @@ def deriv_softmax(x):
 
 #CBoW
 def CBoW(sentenses, window_size=2):
-    #movie user rating info
-    item_num = 1682
-    layers = [Projection(4, 200, 0.1), Layer(200, item_num, softmax, deriv_softmax)]
-    #make dataset from sentenses
-    train_X = make_train_from_sentenses(sentenses)
-    train_y = make_onehot(sentenses)
-    for epoch in xrange(10):
-        for x,y in zip(train_X, train_y):
-            cost = train(x[np.newaxis, :], y[np.newaxis, :])
-    return layers[1].W
-
     #make train data from sentenses
     def make_train_from_sentenses(sentenses):
         ret = []
@@ -74,10 +64,12 @@ def CBoW(sentenses, window_size=2):
         ret = []
         for sentense in sentenses:
             temp = sentense[window_size:len(sentense)-window_size]
-            one_hot_code = np.zeros((len(temp), item_num))
-            one_hot_code[np.arange(len(temp)), temp] = 1
-            ret.append(one_hot_code)
+            one_hot_code = np.zeros(item_num)
+            for i in xrange(len(temp)):
+                one_hot_code[temp[i]] = 1
+                ret.append(one_hot_code)
         return ret
+
     #Forward Propagation of multilayer
     def f_props(layers, x):
         z = x
@@ -86,7 +78,7 @@ def CBoW(sentenses, window_size=2):
         return z
     #Back Propagation of multilayer
     def b_props(layers, delta):
-        for i in layer in enumerate(layer[::-1]):
+        for i, layer in enumerate(layers[::-1]):
             if i == 0:
                 layer.delta = delta
             else:
@@ -113,5 +105,16 @@ def CBoW(sentenses, window_size=2):
             layer.W = layer.W - eps * dW
             layer.b = layer.b - eps * db
             z = layer.z
-
         return cost
+
+    #movie user rating info
+    item_num = 1682
+    layers = [Projection(item_num, 200, 1), Layer(200, item_num, softmax, deriv_softmax)]
+    #make dataset from sentenses
+    train_X = make_train_from_sentenses(sentenses)
+    train_y = make_onehot(sentenses)
+    for epoch in xrange(10):
+        for x,y in zip(train_X, train_y):
+            print np.asarray(y).shape
+            cost = train(x[np.newaxis, :], y[np.newaxis, :])
+    return layers[1].W

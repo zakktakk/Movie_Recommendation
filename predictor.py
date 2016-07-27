@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import word2vec
 
 user_num = 943
 item_num = 1682
@@ -34,6 +35,9 @@ convert_column(3, get_occupation_list('ml-100k/u.occupation'))
 #apply item2vec using gensim
 def get_item_timeseries():
     ret = []
-    for i in range(1, user_num + 1):
+#    for i in range(1, user_num + 1):
+    for i in range(1, 5):
         ret.append(np.asarray(df_data.iloc[df_data[df_data[0] == i].sort(3).index][1], dtype='int32'))
     return ret
+
+word2vec.CBoW(get_item_timeseries())
