@@ -29,10 +29,8 @@ class Projection:
         self.W = np.random.uniform(low=-0.08, high=0.08, size=(in_dim, out_dim)).astype("float32") * scale
         self.delta = None
     def f_prop(self, x):
-        print type(x)
         self.z = np.sum(self.W[x], axis = 0) / len(x)
         return self.z
-    #how to b_prop???
     def b_prop(self, delta, W):
         self.delta = np.dot(delta, W.T)
 
@@ -82,6 +80,7 @@ def CBoW(sentenses, window_size=2):
             if i == 0:
                 layer.delta = delta
             else:
+                #TODO Dont need layer.delta
                 delta = layer.b_prop(delta, _W)
             _W = layer.W
     #define error function
@@ -109,12 +108,11 @@ def CBoW(sentenses, window_size=2):
 
     #movie user rating info
     item_num = 1682
-    layers = [Projection(item_num, 200, 1), Layer(200, item_num, softmax, deriv_softmax)]
+    layers = [Projection(item_num, 200, 1.0), Layer(200, item_num, softmax, deriv_softmax)]
     #make dataset from sentenses
     train_X = make_train_from_sentenses(sentenses)
     train_y = make_onehot(sentenses)
     for epoch in xrange(10):
         for x,y in zip(train_X, train_y):
-            print np.asarray(y).shape
             cost = train(x[np.newaxis, :], y[np.newaxis, :])
     return layers[1].W
