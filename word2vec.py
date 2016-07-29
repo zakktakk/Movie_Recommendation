@@ -26,10 +26,11 @@ class Layer:
 #Projection Layer
 class Projection:
     def __init__(self, in_dim, out_dim, scale):
-        self.W = np.random.uniform(low=-0.08, high=0.08, size=(in_dim, out_dim)).astype("float32") * scale
+        rng = np.random.RandomState(1234)
+        self.W = rng.randn(in_dim, out_dim) * scale
         self.delta = None
     def f_prop(self, x):
-        self.z = np.sum(self.W[x], axis = 0) / len(x)
+        self.z = np.sum(self.W[x], axis = 1) / len(x)
         return self.z
     def b_prop(self, delta, W):
         self.delta = np.dot(delta, W.T)
@@ -80,7 +81,6 @@ def CBoW(sentenses, window_size=2):
             if i == 0:
                 layer.delta = delta
             else:
-                #TODO Dont need layer.delta
                 delta = layer.b_prop(delta, _W)
             _W = layer.W
     #define error function
@@ -99,20 +99,30 @@ def CBoW(sentenses, window_size=2):
         #Update Parameters
         z = X
         for i, layer in enumerate(layers):
-            dW = np.dot(z.T, layer.delta)
-            db = np.dot(np.ones(len(z)), layer.delta)
-            layer.W = layer.W - eps * dW
-            layer.b = layer.b - eps * db
+            if i == 0:
+                dW = layer.delta
+                print 'dW'
+                print dW
+                layer.W[z] = layer.W[z] - eps * dW
+            else:
+                dW = np.dot(z.T, layer.delta)
+                db = np.dot(np.ones(len(z)), layer.delta)
+                layer.W = layer.W - eps * dW
+                layer.b = layer.b - eps * db
             z = layer.z
         return cost
 
     #movie user rating info
     item_num = 1682
-    layers = [Projection(item_num, 200, 1.0), Layer(200, item_num, softmax, deriv_softmax)]
+    layers = [Projection(item_num, 100, 1.0), Layer(100, item_num, softmax, deriv_softmax)]
     #make dataset from sentenses
     train_X = make_train_from_sentenses(sentenses)
     train_y = make_onehot(sentenses)
-    for epoch in xrange(10):
+    for epoch in xrange(3):
+        print epoch
+        print 'enbedding'
+        print layers[0].W
+        print 'dense'
+        print layers[-1].W
         for x,y in zip(train_X, train_y):
             cost = train(x[np.newaxis, :], y[np.newaxis, :])
-    return layers[1].W
