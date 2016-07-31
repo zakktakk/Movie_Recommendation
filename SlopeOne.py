@@ -33,6 +33,7 @@ def slope_one(eval_mat):
     #get predictive evaluation matrix
     pred_mat = np.zeros((user_num, item_num))
     for u in xrange(user_num):
+        print u
         eval_row = np.where(eval_mat[u] != 0)[0]
         for j in xrange(item_num):
             pred_mat[u][j] = (np.sum(dev[j][eval_row] + eval_mat[u][eval_row])) / len(eval_row)
@@ -73,6 +74,7 @@ def weighted_slope_one(eval_mat):
     #get predictive evaluation matrix
     pred_mat = np.zeros((user_num, item_num))
     for u in xrange(user_num):
+        print u
         eval_row = np.where(eval_mat[u] != 0)[0]
         for j in xrange(item_num):
             pred_mat[u][j] = np.sum((dev[j][eval_row] + eval_mat[u][eval_row]) * evaled_users_mat[j][eval_row]) / np.sum(evaled_users_mat[j][eval_row])
@@ -143,6 +145,7 @@ def bipolar_slope_one(eval_mat):
     #get predictive evaluation matrix
     pred_mat = np.zeros((user_num, item_num))
     for u in xrange(user_num):
+        print u
         eval_like_row = np.where(eval_mat[u] >= ave_eval_lst[u])[0]
         eval_dislike_row = np.where(eval_mat[u] < ave_eval_lst[row])[0]
         for j in xrange(item_num):

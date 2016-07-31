@@ -10,11 +10,11 @@ rating_num = 100000
 
 #u.data -> user_id, item_id, rating, time_stamp
 df_data = pd.read_csv('ml-100k/u.data', sep='\t', header=None)
-#u.user -> user_id, age, gender, occupation, zip code
+#u.user -> user_id, age, gender,occupation, zip code
 df_user = pd.read_csv('ml-100k/u.user', sep='|', header=None)
 #u.item -> movie id | movie title | release date | video release date |IMDb URL | unknown | Action | Adventure | Animation |Children's | Comedy | Crime | Documentary | Drama | Fantasy |Film-Noir | Horror | Musical | Mystery | Romance | Sci-Fi |Thriller | War | Western |
 df_item = pd.read_csv('ml-100k/u.item', sep='|', header=None)
-"""
+
 #convert u.user's gender and occupation to each id
 #read file and make occupation list
 def get_occupation_list(path):
@@ -22,7 +22,7 @@ def get_occupation_list(path):
     f = open(path)
     lines = f.readlines()
     f.close()
-    for line in lines:+
+    for line in lines:
         ret.append(line.strip())
     return ret
 
@@ -38,9 +38,12 @@ convert_column(3, get_occupation_list('ml-100k/u.occupation'))
 def get_item_timeseries():
     ret = []
 #    for i in range(1, user_num + 1):
-    for i in range(1, 5):
+    for i in range(1, 10):
         ret.append(np.asarray(df_data.iloc[df_data[df_data[0] == i].sort(3).index][1], dtype='int32'))
     return ret
+
+print word2vec.CBoW(get_item_timeseries())
+
 """
 #make user-item-evaluate matrix
 def get_eval_matrix():
@@ -49,4 +52,5 @@ def get_eval_matrix():
         ret[data[0] - 1][data[1] - 1] = data[2]
     return ret
 
-SlopeOne.weighted_slope_one(get_eval_matrix())
+print SlopeOne.bipolar_slope_one(get_eval_matrix())
+"""

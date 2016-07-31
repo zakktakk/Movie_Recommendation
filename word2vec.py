@@ -1,6 +1,8 @@
 #this is class for ward2vec using CBoW method (not implementing skip-gram)
 from __future__ import division
 import numpy as np
+import math
+import sys
 #Dense Layer
 class Layer:
     # Constructor
@@ -11,6 +13,8 @@ class Layer:
         self.deriv_function = deriv_function
         self.u = None
         self.delta = None
+        self.r_dW = np.zeros(out_dim)
+        self.r_db = np.zeros(out_dim)
 
     #Forward Propagation
     def f_prop(self, x):
@@ -29,11 +33,15 @@ class Projection:
         rng = np.random.RandomState(1234)
         self.W = rng.randn(in_dim, out_dim) * scale
         self.delta = None
+        self.r_dW = np.zeros(out_dim)
+
     def f_prop(self, x):
-        self.z = np.sum(self.W[x], axis = 1) / len(x)
+        self.z = np.sum(self.W[x], axis = 1) / len(x[0])
         return self.z
+
     def b_prop(self, delta, W):
         self.delta = np.dot(delta, W.T)
+        return self.delta
 
 #define activation function
 def softmax(x):
@@ -63,8 +71,8 @@ def CBoW(sentenses, window_size=2):
         ret = []
         for sentense in sentenses:
             temp = sentense[window_size:len(sentense)-window_size]
-            one_hot_code = np.zeros(item_num)
             for i in xrange(len(temp)):
+                one_hot_code = np.zeros(item_num)
                 one_hot_code[temp[i]] = 1
                 ret.append(one_hot_code)
         return ret
@@ -87,7 +95,7 @@ def CBoW(sentenses, window_size=2):
     def er_cost(y, t):
         return np.sum(np.log(y) * t)
 
-    def train(X, t, eps=1.0):
+    def train(X, t, alpha=1.0e-2, eps=1.0e-8):
         #Forward Propagation
         y = f_props(layers, X)
         #Cost Function & delta
@@ -95,20 +103,20 @@ def CBoW(sentenses, window_size=2):
         delta = y - t
         #Back Propagation
         b_props(layers, delta)
-
         #Update Parameters
         z = X
         for i, layer in enumerate(layers):
             if i == 0:
                 dW = layer.delta
-                print 'dW'
-                print dW
-                layer.W[z] = layer.W[z] - eps * dW
+                layer.r_dW = layer.r_dW + dW ** 2
+                layer.W[z] = layer.W[z] - alpha / (np.sqrt(layer.r_dW) + eps) * dW
             else:
                 dW = np.dot(z.T, layer.delta)
                 db = np.dot(np.ones(len(z)), layer.delta)
-                layer.W = layer.W - eps * dW
-                layer.b = layer.b - eps * db
+                layer.r_dW = layer.r_dW + dW ** 2
+                layer.r_db = layer.r_db + db ** 2
+                layer.W = layer.W - alpha / (np.sqrt(layer.r_dW) + eps) * dW
+                layer.b = layer.b - alpha / (np.sqrt(layer.r_db) + eps) * db
             z = layer.z
         return cost
 
@@ -119,10 +127,6 @@ def CBoW(sentenses, window_size=2):
     train_X = make_train_from_sentenses(sentenses)
     train_y = make_onehot(sentenses)
     for epoch in xrange(3):
-        print epoch
-        print 'enbedding'
-        print layers[0].W
-        print 'dense'
-        print layers[-1].W
         for x,y in zip(train_X, train_y):
             cost = train(x[np.newaxis, :], y[np.newaxis, :])
+    return layers[0].W
