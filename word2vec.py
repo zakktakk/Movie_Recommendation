@@ -55,6 +55,7 @@ def deriv_softmax(x):
 
 #CBoW
 def CBoW(sentenses, window_size=2):
+    sentenses = sentenses - 1
     #make train data from sentenses
     def make_train_from_sentenses(sentenses):
         ret = []
@@ -109,7 +110,7 @@ def CBoW(sentenses, window_size=2):
             if i == 0:
                 dW = layer.delta
                 layer.r_dW = layer.r_dW + dW ** 2
-                layer.W[z] = layer.W[z] - alpha / (np.sqrt(layer.r_dW) + eps) * dW
+                layer.W[z] = layer.W[z] - alpha / (2 * window_size * (np.sqrt(layer.r_dW) + eps)) * dW
             else:
                 dW = np.dot(z.T, layer.delta)
                 db = np.dot(np.ones(len(z)), layer.delta)
@@ -126,7 +127,8 @@ def CBoW(sentenses, window_size=2):
     #make dataset from sentenses
     train_X = make_train_from_sentenses(sentenses)
     train_y = make_onehot(sentenses)
-    for epoch in xrange(3):
+    for epoch in xrange(15):
+        print epoch
         for x,y in zip(train_X, train_y):
             cost = train(x[np.newaxis, :], y[np.newaxis, :])
     return layers[0].W
