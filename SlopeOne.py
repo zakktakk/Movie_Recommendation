@@ -24,7 +24,6 @@ def slope_one(eval_mat):
     for i in xrange(item_num):
         for j in xrange(item_num):
             if i == j:
-                print 'adf' + str(i)
                 break
             else:
                 dev_temp = get_dev_val(i, j)
@@ -84,7 +83,17 @@ def weighted_slope_one(eval_mat):
 def bipolar_slope_one(eval_mat):
     user_num = eval_mat.shape[0]
     item_num = eval_mat.shape[1]
-    ave_eval_lst = np.average(eval_mat, axis = 1)
+
+    def average_evaluation(eval_mat):
+        ret = np.mean(eval_mat, axis = 1)
+        items = eval_mat.shape[1]
+        for row in xrange(ret.shape[0]):
+            nonzero = np.count_nonzero(eval_mat[row])
+            ret[row] *= items / nonzero
+        return ret
+
+    ave_eval_lst = average_evaluation(eval_mat)
+    print ave_eval_lst
 
     #get average deviation
     def get_dev_val_like(i, j):
@@ -93,7 +102,7 @@ def bipolar_slope_one(eval_mat):
         for row in xrange(user_num):
             #if the user evaluated both movie i and movie j
             threshold = ave_eval_lst[row]
-            if((eval_mat[row][i] >= threshold) and (eval_mat[row][j] != threshold)):
+            if((eval_mat[row][i] > threshold) and (eval_mat[row][j] > threshold)):
                 users_like += 1
                 dev_val += eval_mat[row][i] - eval_mat[row][j]
         #avoid zero division
@@ -110,7 +119,7 @@ def bipolar_slope_one(eval_mat):
         for row in xrange(user_num):
             #if the user evaluated both movie i and movie j
             threshold = ave_eval_lst[row]
-            if((eval_mat[row][i] < threshold) and (eval_mat[row][j] < threshold)):
+            if((0 < eval_mat[row][i] < threshold) and (0 < eval_mat[row][j] < threshold)):
                 users_dislike += 1
                 dev_val += eval_mat[row][i] - eval_mat[row][j]
         #avoid zero division
@@ -145,9 +154,19 @@ def bipolar_slope_one(eval_mat):
     #get predictive evaluation matrix
     pred_mat = np.zeros((user_num, item_num))
     for u in xrange(user_num):
-        print u
-        eval_like_row = np.where(eval_mat[u] >= ave_eval_lst[u])[0]
-        eval_dislike_row = np.where(eval_mat[u] < ave_eval_lst[row])[0]
+        eval_like_row = np.where(eval_mat[u] > ave_eval_lst[u])[0]
+        eval_dislike_row = np.where((eval_mat[u] < ave_eval_lst[u]) & (eval_mat[u] > 0))[0]
         for j in xrange(item_num):
-            pred_mat[u][j] = (np.sum(dev_like[j][eval_like_row] * evaled_like_users_mat[j][eval_like_row]) + np.sum(dev_dislike[j][eval_dislike_row] * evaled_dislike_users_mat[j][eval_dislike_row])) / (np.sum(evaled_like_users_mat[j][eval_like_row]) + np.sum(evaled_dislike_users_mat[j][eval_dislike_row]))
+            den = np.sum(evaled_like_users_mat[j][eval_like_row]) + np.sum(evaled_dislike_users_mat[j][eval_dislike_row])
+            if den != 0:
+                nume = np.sum((dev_like[j][eval_like_row] + eval_mat[u][eval_like_row]) * evaled_like_users_mat[j][eval_like_row]) + np.sum((dev_dislike[j][eval_dislike_row] + eval_mat[u][eval_dislike_row]) * evaled_dislike_users_mat[j][eval_dislike_row])
+                print nume
+                pred_mat[u][j] = nume / den
     return pred_mat
+
+if __name__ == '__main__':
+    R = np.array([[4,5,2,4,0,5],[2,0,3,4,3,0],[1,4,0,5,3,4],[0,5,0,0,2,4],[0,3,1,3,0,3]])
+    # R = np.array([[5, 3, 0, 1],[4, 0, 0, 1],[1, 1, 0, 5],[1, 0, 0, 4],[0, 1, 5, 4]])
+    nR = bipolar_slope_one(R)
+    print R
+    print nR
