@@ -58,11 +58,10 @@ def get_cosine_matrix(mat):
 
 def cosine_similarity(vec1, vec2):
     return np.dot(vec1, vec2) / math.sqrt(np.dot(vec1, vec1) * np.dot(vec2, vec2))
-cosine = get_cosine_matrix(word2vec.CBoW(get_item_timeseries()))
-print np.max(cosine)
-print np.argmax(cosine)
 
 """
+cosine = get_cosine_matrix(word2vec.CBoW(get_item_timeseries()))
+
 #make user-item-evaluate matrix
 def get_eval_matrix():
     ret = np.zeros((user_num, item_num))

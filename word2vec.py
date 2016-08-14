@@ -1,4 +1,4 @@
-#this is class for ward2vec using CBoW method (not implementing skip-gram)
+#this is class fo?Rr ward2vec using CBoW method (not implementing skip-gram)
 from __future__ import division
 import numpy as np
 import math
@@ -123,11 +123,11 @@ def CBoW(sentenses, window_size=2):
 
     #movie user rating info
     item_num = 1682
-    layers = [Projection(item_num, 100, 1.0), Layer(100, item_num, softmax, deriv_softmax)]
+    layers = [Projection(item_num, 30, 1.0), Layer(30, item_num, softmax, deriv_softmax)]
     #make dataset from sentenses
     train_X = make_train_from_sentenses(sentenses)
     train_y = make_onehot(sentenses)
-    for epoch in xrange(15):
+    for epoch in xrange(10):
         print epoch
         for x,y in zip(train_X, train_y):
             cost = train(x[np.newaxis, :], y[np.newaxis, :])
