@@ -17,7 +17,7 @@ from __future__ import division
 import numpy as np
 
 class MatrixFactorization:
-    def __init__(self, rating, dimension, steps=5000, gamma=0.005, lmd=0.02, threshold=0.001):
+    def __init__(self, rating, dimension, steps=35, gamma=0.01, lmd=0.05, threshold=0.001):
         #rating data
         self.rating = rating
         #average rating for all users and all items
@@ -27,9 +27,9 @@ class MatrixFactorization:
         #bias for item
         self.b_i = self.b_i()
         #p represent users latent factor
-        self.p = np.random.rand(rating.shape[0], dimension)
+        self.p = np.random.rand(rating.shape[0], dimension)/rating.shape[0]
         #q represent items latent factor
-        self.q = np.random.rand(dimension, rating.shape[1])
+        self.q = np.random.rand(dimension, rating.shape[1])/rating.shape[1]
         #learning patramaters
         self.gamma = gamma
         self.lmd = lmd
@@ -57,7 +57,8 @@ class MatrixFactorization:
         users = self.rating.shape[0]
         for col in xrange(ret.shape[0]):
             nonzero = np.count_nonzero(self.rating[:, col])
-            ret[col] *= users / nonzero
+            if nonzero != 0:
+                ret[col] *= users / nonzero
         return ret - self.mu
 
     def get_bias(self):
@@ -99,7 +100,8 @@ class MatrixFactorization:
             error = self.get_error()
             if(error < self.threshold):
                 break
-        return np.dot(self.p, self.q) + self.get_bias()
+        ret = np.dot(self.p, self.q) + self.get_bias()
+        return ret
 
 if __name__ == '__main__':
     R = np.array([[5, 3, 0, 1],[4, 0, 0, 1],[1, 1, 0, 5],[1, 0, 0, 4],[0, 1, 5, 4]])

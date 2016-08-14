@@ -5,4 +5,4 @@ import numpy as np
 import math
 
 def RMSE(predict, correct):
-    return math.sqrt(np.average((predict - correct) ** 2))
+    return math.sqrt(np.average((predict[np.where(correct > 0)] - correct[np.where(correct > 0)]) ** 2))

@@ -222,6 +222,6 @@ def bipolar_slope_one(eval_mat):
 #test
 if __name__ == '__main__':
     R = np.array([[4,5,2,4,0,5],[2,0,3,4,3,0],[1,4,0,5,3,4],[0,5,0,0,2,4],[0,3,1,3,0,3]])
-    nR = bipolar_slope_one(R)
+    nR = weighted_slope_one(R)
     print R
     print nR

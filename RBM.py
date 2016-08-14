@@ -15,7 +15,7 @@ from __future__ import division
 import numpy as np
 
 class RBM:
-    def __init__(self, n_visible, n_hidden, rating, rating_num=5, learning_rate=0.1, t=5, lmd=0.0001, epochs=1000):
+    def __init__(self, n_visible, n_hidden, rating, rating_num=5, learning_rate=0.001, t=3, lmd=0.01, epochs=12):
         #rating grade 1~rating_num
         self.rating_num = rating_num
         #number of visible unit
@@ -29,7 +29,7 @@ class RBM:
         #learning paramater
         self.learning_rate = learning_rate
         self.t = t
-        self.users = input.shape[0]
+        self.users = rating.shape[0]
         self.input = self.convert_input(rating)
         self.lmd = lmd
         self.epochs = epochs
@@ -41,7 +41,7 @@ class RBM:
         """
         self.W_dict = {}
         for step in xrange(1,self.rating_num+1):
-            W = np.random.uniform(low=-1/self.n_visible, high=1/self.n_visible, size=(self.n_visible, self.n_hidden)).astype("float32")
+            W = np.random.uniform(low=-1/(self.n_visible * self.n_hidden), high=1/(self.n_visible * self.n_hidden), size=(self.n_visible, self.n_hidden)).astype("float32")
             self.W_dict.update({step:W})
 
     def init_visible_bias(self):
@@ -170,6 +170,7 @@ class RBM:
         re_v = np.zeros(v.shape)
         for step in xrange(1, self.rating_num+1):
             re_v += step * re_v_dict[step]
+        print re_v
         return re_v
 
     def convert_input(self, input):
@@ -187,4 +188,5 @@ class RBM:
 
     def train(self):
         for epoch in xrange(self.epochs):
+            print epoch
             self.contrastive_divergence()
