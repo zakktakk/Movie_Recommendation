@@ -1,21 +1,46 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""
+Matrix Factorization(MF)
+
+Reference:
+- Y.Koren, R.Bell, C.Volinsky, "Matrix Factorization Techniques For Recommender Systems", IEEE Computer Society, (2009)
+    https://datajobs.com/data-science-repo/Recommender-Systems-[Netflix].pdf
+- G.Louppe Master's thesis
+    http://www.montefiore.ulg.ac.be/~glouppe/pdf/msc-thesis.pdf
+- S.Gower, "Netflix Prize and SVD", (2014)
+    http://buzzard.ups.edu/courses/2014spring/420projects/math420-UPS-spring-2014-gower-netflix-SVD.pdf
+"""
+
 from __future__ import division
 import numpy as np
 
 class MatrixFactorization:
-    #https://datajobs.com/data-science-repo/Collaborative-Filtering-[Koren-and-Bell].pdf
     def __init__(self, rating, dimension, steps=5000, gamma=0.005, lmd=0.02, threshold=0.001):
+        #rating data
         self.rating = rating
+        #average rating for all users and all items
         self.mu = np.mean(rating[rating > 0])
+        #bias for user
         self.b_u = self.b_u()
+        #bias for item
         self.b_i = self.b_i()
+        #p represent users latent factor
         self.p = np.random.rand(rating.shape[0], dimension)
+        #q represent items latent factor
         self.q = np.random.rand(dimension, rating.shape[1])
+        #learning patramaters
         self.gamma = gamma
         self.lmd = lmd
         self.steps = steps
         self.threshold = threshold
 
     def b_u(self):
+        """
+        function for set b_u(bias for user)
+        @return array of each users bias
+        """
         ret = np.mean(self.rating, axis=1, keepdims=True)
         items = self.rating.shape[1]
         for row in xrange(ret.shape[0]):
@@ -24,6 +49,10 @@ class MatrixFactorization:
         return ret - self.mu
 
     def b_i(self):
+        """
+        function for set b_i(bias for item)
+        @return array of each items bias
+        """
         ret = np.mean(self.rating, axis=0)
         users = self.rating.shape[0]
         for col in xrange(ret.shape[0]):
@@ -32,15 +61,27 @@ class MatrixFactorization:
         return ret - self.mu
 
     def get_bias(self):
+        """
+        function to get user-item bias matrix(mu + b_u + b_i)
+        @return user-item bias matrix
+        """
         return np.zeros((self.rating.shape[0], self.rating.shape[1])) + self.mu + self.b_u + self.b_i
 
     def get_error(self):
+        """
+        function to get regularized error value(object of minimization)
+        @return regularized error value
+        """
         rating_error = np.sum((self.rating - np.dot(self.p, self.q) - self.get_bias()) ** 2)
         regularize = np.linalg.norm(self.p) ** 2 + np.linalg.norm(self.q) ** 2 + np.linalg.norm(self.b_u) ** 2 + np.linalg.norm(self.b_i) ** 2
         return rating_error + self.lmd * regularize
 
     def update(self):
+        """
+        function to update using stochastic gradient descent(SGD)
+        """
         error = self.rating - np.dot(self.p, self.q) - self.get_bias()
+        #remove unrated user-item pair from update
         error[np.where(self.rating == 0)] = 0
         temp_q = self.q.copy()
         self.q += self.gamma * (np.dot(self.p.T, error) - self.lmd * self.q)
@@ -49,11 +90,13 @@ class MatrixFactorization:
         self.b_i += self.gamma * (np.mean(error, axis=0) - self.lmd * self.b_i)
 
     def run(self):
+        """
+        function to run learning
+        @return predicted rating matrix
+        """
         for i in xrange(self.steps):
             self.update()
             error = self.get_error()
-            if(i % 1000 == 0):
-                print error
             if(error < self.threshold):
                 break
         return np.dot(self.p, self.q) + self.get_bias()

@@ -1,13 +1,35 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""
+Slope One Predictor - Slope One, Weighted Slope One, Bi-polar Slope One
+
+Reference:
+- D.Lemire, A.Maclachlan, "Slope One Predictors for Online Rating-Based Collaborative Filtering", SDM'05, (2005)
+    http://lemire.me/fr/documents/publications/lemiremaclachlan_sdm05.pdf
+- 森口麻里, "協調フィルタリングを用いた映画評価予測プログラムの試作", (2009)
+    http://www.tani.cs.chs.nihon-u.ac.jp/g-2009/mori/sotuken/mori_re.pdf
+"""
+
 from __future__ import division
 import numpy as np
-#http://www.tani.cs.chs.nihon-u.ac.jp/g-2009/mori/sotuken/mori_re.pdf
 
-#slope one
+#Slope One Predictor
 def slope_one(eval_mat):
+    """
+    function implement slope one algorithm
+    @param rating matrix
+    @return predicted rating matrix
+    """
     user_num = eval_mat.shape[0]
     item_num = eval_mat.shape[1]
     #get average deviation
     def get_dev_val(i, j):
+        """
+        function to get deviation of item i and item j
+        @param item pair
+        @return deviation value
+        """
         dev_val = 0
         users = 0
         for row in xrange(user_num):
@@ -19,20 +41,23 @@ def slope_one(eval_mat):
         if(users == 0):
             return 0
         return dev_val / users
+
     #get average diviation
     dev = np.zeros((item_num, item_num))
     for i in xrange(item_num):
         for j in xrange(item_num):
             if i == j:
+                #to lessen time complexity
                 break
             else:
+                # dev[i][j] = -dev[j][i]
                 dev_temp = get_dev_val(i, j)
                 dev[i][j] = dev_temp
                 dev[j][i] = (-1) * dev_temp
     #get predictive evaluation matrix
     pred_mat = np.zeros((user_num, item_num))
     for u in xrange(user_num):
-        print u
+        #only get rated item
         eval_row = np.where(eval_mat[u] != 0)[0]
         for j in xrange(item_num):
             pred_mat[u][j] = (np.sum(dev[j][eval_row] + eval_mat[u][eval_row])) / len(eval_row)
@@ -40,10 +65,20 @@ def slope_one(eval_mat):
 
 #weighted slope one
 def weighted_slope_one(eval_mat):
+    """
+    function implement weighted slope one algorithm
+    @param rating matrix
+    @return predicted rating matrix
+    """
     user_num = eval_mat.shape[0]
     item_num = eval_mat.shape[1]
     #get average deviation
     def get_dev_val(i, j):
+        """
+        function to get deviation of item i and item j
+        @param item pair
+        @return deviation value and evaled user num
+        """
         dev_val = 0
         users = 0
         for row in xrange(user_num):
@@ -57,12 +92,15 @@ def weighted_slope_one(eval_mat):
         else:
             ret = dev_val / users
         return ret, users
+
     #get average diviation
     dev = np.zeros((item_num, item_num))
+    #evaled users matrix,(i, j) element represents number of users who evaluated both item i and item j
     evaled_users_mat = np.zeros((item_num, item_num))
     for i in xrange(item_num):
         for j in xrange(item_num):
             if i == j:
+                #to lessen time complexity
                 break
             else:
                 dev_temp, users = get_dev_val(i, j)
@@ -73,7 +111,6 @@ def weighted_slope_one(eval_mat):
     #get predictive evaluation matrix
     pred_mat = np.zeros((user_num, item_num))
     for u in xrange(user_num):
-        print u
         eval_row = np.where(eval_mat[u] != 0)[0]
         for j in xrange(item_num):
             pred_mat[u][j] = np.sum((dev[j][eval_row] + eval_mat[u][eval_row]) * evaled_users_mat[j][eval_row]) / np.sum(evaled_users_mat[j][eval_row])
@@ -81,10 +118,20 @@ def weighted_slope_one(eval_mat):
 
 #bi-polar slope one
 def bipolar_slope_one(eval_mat):
+    """
+    function implement bipolar slope one algorithm
+    @param rating matrix
+    @return predicted rating matrix
+    """
     user_num = eval_mat.shape[0]
     item_num = eval_mat.shape[1]
 
     def average_evaluation(eval_mat):
+        """
+        function to get average evaluation of each user
+        @param rating matrix
+        @return average rating of each user, array
+        """
         ret = np.mean(eval_mat, axis = 1)
         items = eval_mat.shape[1]
         for row in xrange(ret.shape[0]):
@@ -93,10 +140,14 @@ def bipolar_slope_one(eval_mat):
         return ret
 
     ave_eval_lst = average_evaluation(eval_mat)
-    print ave_eval_lst
 
     #get average deviation
     def get_dev_val_like(i, j):
+        """
+        function to get deviation of liked item i and liked item j
+        @param item pair
+        @return deviation value and evaled user num
+        """
         dev_val = 0
         users_like = 0
         for row in xrange(user_num):
@@ -114,6 +165,11 @@ def bipolar_slope_one(eval_mat):
 
     #get average deviation
     def get_dev_val_dislike(i, j):
+        """
+        function to get deviation of disliked item i and disliked item j
+        @param item pair
+        @return deviation value and evaled user num
+        """
         dev_val = 0
         users_dislike = 0
         for row in xrange(user_num):
@@ -160,13 +216,12 @@ def bipolar_slope_one(eval_mat):
             den = np.sum(evaled_like_users_mat[j][eval_like_row]) + np.sum(evaled_dislike_users_mat[j][eval_dislike_row])
             if den != 0:
                 nume = np.sum((dev_like[j][eval_like_row] + eval_mat[u][eval_like_row]) * evaled_like_users_mat[j][eval_like_row]) + np.sum((dev_dislike[j][eval_dislike_row] + eval_mat[u][eval_dislike_row]) * evaled_dislike_users_mat[j][eval_dislike_row])
-                print nume
                 pred_mat[u][j] = nume / den
     return pred_mat
 
+#test
 if __name__ == '__main__':
     R = np.array([[4,5,2,4,0,5],[2,0,3,4,3,0],[1,4,0,5,3,4],[0,5,0,0,2,4],[0,3,1,3,0,3]])
-    # R = np.array([[5, 3, 0, 1],[4, 0, 0, 1],[1, 1, 0, 5],[1, 0, 0, 4],[0, 1, 5, 4]])
     nR = bipolar_slope_one(R)
     print R
     print nR
