@@ -45,7 +45,8 @@ class MatrixFactorization:
         items = self.rating.shape[1]
         for row in xrange(ret.shape[0]):
             nonzero = np.count_nonzero(self.rating[row])
-            ret[row] *= items / nonzero
+            if nonzero != 0:
+                ret[row] *= items / nonzero
         return ret - self.mu
 
     def b_i(self):
@@ -104,7 +105,7 @@ class MatrixFactorization:
         return ret
 
 if __name__ == '__main__':
-    R = np.array([[5, 3, 0, 1],[4, 0, 0, 1],[1, 1, 0, 5],[1, 0, 0, 4],[0, 1, 5, 4]])
+    R = np.array([[5, 3, 0, 1],[4, 0, 0, 1],[0, 0, 0, 0],[1, 0, 0, 4],[0, 1, 5, 4]])
     mf = MatrixFactorization(rating=R, dimension=2)
     nR = mf.run()
     print R
