@@ -17,7 +17,7 @@ from __future__ import division
 import numpy as np
 
 class MatrixFactorization:
-    def __init__(self, rating, dimension, steps=35, gamma=0.01, lmd=0.05, threshold=0.001):
+    def __init__(self, rating, dimension, steps=200, gamma=0.01, lmd=0.05, threshold=0.001):
         #rating data
         self.rating = rating
         #average rating for all users and all items
@@ -105,7 +105,7 @@ class MatrixFactorization:
         return ret
 
 if __name__ == '__main__':
-    R = np.array([[5, 3, 0, 1],[4, 0, 0, 1],[0, 0, 0, 0],[1, 0, 0, 4],[0, 1, 5, 4]])
+    R = np.array([[5, 3, 0, 1],[4, 0, 0, 1],[1, 3, 0, 0],[1, 0, 0, 4],[0, 1, 5, 4]])
     mf = MatrixFactorization(rating=R, dimension=2)
     nR = mf.run()
     print R

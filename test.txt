@@ -1,0 +1,6 @@
+hoge	aa	1
+hoge	nb	1
+haga	ad	2
+haga	adf	1
+doge	kja	3
+doge	bab	1
